@@ -1,36 +1,32 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ message: 'Method not allowed' });
-    return;
+    return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { firstName = '', lastName = '', email = '' } = req.body || {};
-
   try {
+    const { name, surname, email } = req.body;
+
+    // создаем PDF
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([450, 320]);
+    const page = pdfDoc.addPage([600, 400]);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const { width, height } = page.getSize();
 
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontSizeTitle = 14;
-    const fontSizeNormal = 12;
+    const title = 'Билет на концерт Эскалада, Totma, X-Caro | Ставрополь';
+    const info = `Имя: ${name} ${surname}\nEmail: ${email}\nДата: 6 декабря, 19:00\nМесто: Rock Bar, ул. Пирогова 63Б\nЦена: 500₽`;
 
-    page.drawText('Эскалада, Totma, X-Caro | Ставрополь', { x: 40, y: 270, size: fontSizeTitle, font: helveticaFont, color: rgb(0,0,0) });
-    page.drawText('Дата: 6 декабря 2025, Время: 19:00', { x: 40, y: 250, size: fontSizeNormal, font: helveticaFont });
-    page.drawText('Площадка: Rock Bar, Ул. Пирогова 63Б, Ставрополь', { x: 40, y: 230, size: fontSizeNormal, font: helveticaFont });
-    page.drawText(`Имя: ${firstName}`, { x: 40, y: 200, size: fontSizeNormal, font: helveticaFont });
-    page.drawText(`Фамилия: ${lastName}`, { x: 40, y: 180, size: fontSizeNormal, font: helveticaFont });
-    page.drawText(`Email: ${email}`, { x: 40, y: 160, size: fontSizeNormal, font: helveticaFont });
-    page.drawText('Цена билета: 500 ₽', { x: 40, y: 140, size: fontSizeNormal, font: helveticaFont });
-    page.drawText('Билет действителен только при предъявлении.', { x: 40, y: 120, size: 10, font: helveticaFont });
+    page.drawText(title, { x: 50, y: height - 80, size: 16, font, color: rgb(0, 0, 0) });
+    page.drawText(info, { x: 50, y: height - 140, size: 12, font, color: rgb(0, 0, 0) });
 
     const pdfBytes = await pdfDoc.save();
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=Билет_Эскалада.pdf');
-    res.status(200).send(Buffer.from(pdfBytes));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.setHeader('Content-Disposition', 'attachment; filename="ticket.pdf"');
+    res.send(Buffer.from(pdfBytes));
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({ message: 'Ошибка генерации билета' });
   }
 }
