@@ -21,11 +21,15 @@ const TicketForm = () => {
         body: JSON.stringify(form),
       });
 
-      if (!res.ok) throw new Error("Ошибка генерации билета");
+      if (!res.ok) throw new Error('Ошибка при генерации PDF');
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ticket.pdf';
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       alert("Не удалось сгенерировать билет: " + err.message);
     } finally {

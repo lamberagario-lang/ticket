@@ -8,6 +8,7 @@ export default async function handler(req, res) {
   try {
     const { name = '', surname = '', email = '' } = req.body;
 
+    // создаем PDF
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([600, 400]);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="ticket.pdf"');
-    res.status(200).end(Buffer.from(pdfBytes)); // <-- важно использовать .end и Buffer.from
+    res.status(200).end(Buffer.from(pdfBytes));
   } catch (error) {
     console.error('PDF generation error:', error);
     res.status(500).json({ message: 'Ошибка генерации билета' });
