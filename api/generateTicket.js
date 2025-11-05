@@ -20,10 +20,11 @@ export default async function handler(req, res) {
     page.drawText(info, { x: 50, y: height - 140, size: 12, font, color: rgb(0, 0, 0) });
 
     const pdfBytes = await pdfDoc.save();
+    const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
 
-    res.setHeader('Content-Type', 'application/pdf');
+    res.status(200).setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="ticket.pdf"');
-    res.status(200).end(Buffer.from(pdfBytes)); // <-- заменил send на end
+    res.send(Buffer.from(pdfBase64, 'base64')); // ✅ так Vercel правильно отправит PDF
   } catch (error) {
     console.error('PDF generation error:', error);
     res.status(500).json({ message: 'Ошибка генерации билета' });
